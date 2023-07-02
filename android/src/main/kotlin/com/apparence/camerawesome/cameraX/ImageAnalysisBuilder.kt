@@ -63,7 +63,7 @@ class ImageAnalysisBuilder private constructor(
     @SuppressLint("RestrictedApi")
     fun build(): ImageAnalysis {
         countDownLatch.reset()
-        val imageAnalysis = ImageAnalysis.Builder().setTargetResolution(Size(width, height))
+        val imageAnalysis = ImageAnalysis.Builder()
             .setBackpressureStrategy(ImageAnalysis.STRATEGY_KEEP_ONLY_LATEST)
             .setOutputImageFormat(ImageAnalysis.OUTPUT_IMAGE_FORMAT_YUV_420_888).build()
         imageAnalysis.setAnalyzer(Dispatchers.IO.asExecutor()) { imageProxy ->
