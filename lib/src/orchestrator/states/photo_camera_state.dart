@@ -5,7 +5,6 @@ import 'package:camerawesome/pigeon.dart';
 import 'package:camerawesome/src/orchestrator/camera_context.dart';
 import 'package:camerawesome/src/orchestrator/states/handlers/filter_handler.dart';
 import 'package:camerawesome/src/photofilters/filters/filters.dart';
-import 'package:collection/collection.dart';
 import 'package:rxdart/rxdart.dart';
 
 class PhotoFilterModel {
@@ -14,6 +13,11 @@ class PhotoFilterModel {
   final CaptureRequest captureRequest;
   final Filter filter;
 }
+
+/// Callback to get the CaptureRequest after the photo has been taken
+typedef OnPhotoCallback = Function(CaptureRequest request);
+
+typedef OnPhotoFailedCallback = Function(Exception exception);
 
 /// When Camera is in Image mode
 class PhotoCameraState extends CameraState {
@@ -62,9 +66,12 @@ class PhotoCameraState extends CameraState {
   ///
   /// You can listen to [cameraSetup.mediaCaptureStream] to get updates
   /// of the photo capture (capturing, success/failure)
-  Future<CaptureRequest> takePhoto() async {
+  Future<CaptureRequest> takePhoto({
+    OnPhotoCallback? onPhoto,
+    OnPhotoFailedCallback? onPhotoFailed,
+  }) async {
     CaptureRequest captureRequest =
-        await filePathBuilder(sensorConfig.sensors.whereNotNull().toList());
+        await filePathBuilder(sensorConfig.sensors..nonNulls.toList());
     final mediaCapture = MediaCapture.capturing(captureRequest: captureRequest);
     if (!mediaCapture.isPicture) {
       throw ("CaptureRequest must be a picture. ${captureRequest.when(
@@ -76,19 +83,30 @@ class PhotoCameraState extends CameraState {
     try {
       final succeeded = await CamerawesomePlugin.takePhoto(captureRequest);
       if (succeeded) {
-        await FilterHandler()
-            .apply(captureRequest: captureRequest, filter: filter);
+        await FilterHandler().apply(
+          captureRequest: captureRequest,
+          filter: filter,
+        );
 
         _mediaCapture = MediaCapture.success(captureRequest: captureRequest);
+        onPhoto?.call(captureRequest);
       } else {
         _mediaCapture = MediaCapture.failure(captureRequest: captureRequest);
+        onPhotoFailed?.call(Exception("Failed to take photo"));
       }
     } on Exception catch (e) {
-      _mediaCapture =
-          MediaCapture.failure(captureRequest: captureRequest, exception: e);
+      _mediaCapture = MediaCapture.failure(
+        captureRequest: captureRequest,
+        exception: e,
+      );
     }
     return captureRequest;
   }
+
+  bool get hasFilters => cameraContext.availableFilters?.isNotEmpty ?? false;
+
+  List<AwesomeFilter>? get availableFilters =>
+      cameraContext.availableFilters?.toList();
 
   /// PRIVATES
 

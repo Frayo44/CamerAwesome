@@ -155,6 +155,7 @@ class CameraAwesomeX : CameraInterface, FlutterPlugin, ActivityAware {
             currentCaptureMode = mode,
             enableImageStream = enableImageStream,
             videoOptions = videoOptions?.android,
+            videoRecordingQuality = videoOptions?.quality,
             onStreamReady = { state -> state.updateLifecycle(activity!!) }).apply {
             this.updateAspectRatio(aspectRatio)
             this.flashMode = FlashMode.valueOf(flashMode)
@@ -194,6 +195,7 @@ class CameraAwesomeX : CameraInterface, FlutterPlugin, ActivityAware {
                         "YUV_420" -> OutputImageFormat.YUV_420_888
                         "NV21" -> OutputImageFormat.NV21
                         "JPEG" -> OutputImageFormat.JPEG
+                        "BGRA8888" -> OutputImageFormat.RGBA_8888
                         else -> OutputImageFormat.NV21
                     },
                     executor(activity!!), width,
@@ -748,22 +750,18 @@ class CameraAwesomeX : CameraInterface, FlutterPlugin, ActivityAware {
 
     @SuppressLint("RestrictedApi")
     override fun getEffectivPreviewSize(index: Long): PreviewSize {
-        val res = cameraState.previews!![index.toInt()].resolutionInfo?.resolution
-        return if (res != null) {
-            val rota90 = 90
-            val rota270 = 270
-            when (cameraState.previews!![index.toInt()].resolutionInfo?.rotationDegrees) {
-                rota90, rota270 -> {
-                    PreviewSize(res.height.toDouble(), res.width.toDouble())
-                }
+        val preview = cameraState.previews?.getOrNull(index.toInt()) ?: return PreviewSize(0.0, 0.0)
+        val resolutionInfo = preview.resolutionInfo ?: return PreviewSize(0.0, 0.0)
+        val res = resolutionInfo.resolution
 
-                else -> {
-                    PreviewSize(res.width.toDouble(), res.height.toDouble())
-                }
-            }
-        } else {
-            PreviewSize(0.0, 0.0)
+        val rotation = resolutionInfo.rotationDegrees
+        val previewSize = when (rotation) {
+            90, 270 -> PreviewSize(res.height.toDouble(), res.width.toDouble())
+            else -> PreviewSize(res.width.toDouble(), res.height.toDouble())
         }
+
+        Log.d("CameraX", "Preview size: width=${previewSize.width}, height=${previewSize.height}, rotation=$rotation")
+        return previewSize
     }
 
     @SuppressLint("RestrictedApi")

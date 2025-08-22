@@ -11,6 +11,9 @@ import androidx.camera.camera2.internal.compat.CameraCharacteristicsCompat
 import androidx.camera.camera2.internal.compat.quirk.CamcorderProfileResolutionQuirk
 import androidx.camera.camera2.interop.Camera2CameraInfo
 import androidx.camera.core.*
+import androidx.camera.core.resolutionselector.AspectRatioStrategy
+import androidx.camera.core.resolutionselector.ResolutionSelector
+import androidx.camera.core.resolutionselector.ResolutionStrategy
 import androidx.camera.lifecycle.ProcessCameraProvider
 import androidx.camera.video.*
 import androidx.core.content.ContextCompat
@@ -47,6 +50,7 @@ data class CameraXState(
     var flashMode: FlashMode = FlashMode.NONE,
     val onStreamReady: (state: CameraXState) -> Unit,
     var mirrorFrontCamera: Boolean = false,
+    val videoRecordingQuality: VideoRecordingQuality?,
     val videoOptions: AndroidVideoOptions?,
 ) : EventChannel.StreamHandler, SensorOrientation {
 
@@ -90,6 +94,7 @@ data class CameraXState(
         previews = mutableListOf()
         imageCaptures.clear()
         videoCaptures.clear()
+        val resolutionSelector = getResolutionSelector(aspectRatio ?: AspectRatio.RATIO_4_3)
         if (cameraProvider.isMultiCamSupported() && sensors.size > 1) {
             val singleCameraConfigs = mutableListOf<ConcurrentCamera.SingleCameraConfig>()
             var isFirst = true
@@ -127,23 +132,20 @@ data class CameraXState(
 
                 val preview = if (aspectRatio != null) {
                     Preview.Builder().setTargetAspectRatio(aspectRatio!!)
-                        .setCameraSelector(cameraSelector).build()
+                        .build()
                 } else {
-                    Preview.Builder().setCameraSelector(cameraSelector).build()
+                    Preview.Builder().build()
                 }
-                preview.setSurfaceProvider(
-                    surfaceProvider(executor(activity), sensor.deviceId ?: "$index")
-                )
+
                 useCaseGroupBuilder.addUseCase(preview)
                 previews!!.add(preview)
 
                 if (currentCaptureMode == CaptureModes.PHOTO) {
-                    val imageCapture = ImageCapture.Builder().setCameraSelector(cameraSelector)
+                    val imageCapture = ImageCapture.Builder()
 //                .setJpegQuality(100)
                         .apply {
-                            //photoSize?.let { setTargetResolution(it) }
                             if (rational.denominator != rational.numerator) {
-                                setTargetAspectRatio(aspectRatio ?: AspectRatio.RATIO_4_3)
+                                setResolutionSelector(resolutionSelector)
                             }
 
                             setFlashMode(
@@ -197,10 +199,11 @@ data class CameraXState(
             if (currentCaptureMode != CaptureModes.ANALYSIS_ONLY) {
                 previews!!.add(
                     if (aspectRatio != null) {
-                        Preview.Builder().setTargetAspectRatio(aspectRatio!!)
-                            .setCameraSelector(cameraSelector).build()
+                        Preview.Builder()
+                            .setResolutionSelector(resolutionSelector)
+                            .build()
                     } else {
-                        Preview.Builder().setCameraSelector(cameraSelector).build()
+                        Preview.Builder().build()
                     }
                 )
 
@@ -211,12 +214,12 @@ data class CameraXState(
             }
 
             if (currentCaptureMode == CaptureModes.PHOTO) {
-                val imageCapture = ImageCapture.Builder().setCameraSelector(cameraSelector)
+                val imageCapture = ImageCapture.Builder()
 //                .setJpegQuality(100)
                     .apply {
                         //photoSize?.let { setTargetResolution(it) }
                         if (rational.denominator != rational.numerator) {
-                            setTargetAspectRatio(aspectRatio ?: AspectRatio.RATIO_4_3)
+                            setResolutionSelector(resolutionSelector)
                         }
                         setFlashMode(
                             when (flashMode) {
@@ -268,11 +271,30 @@ data class CameraXState(
         }
     }
 
+    private fun getResolutionSelector(aspectRatio: Int): ResolutionSelector {
+        val resolutionStrategy = when (aspectRatio) {
+            AspectRatio.RATIO_16_9 -> ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY
+            AspectRatio.RATIO_4_3 -> ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY
+            else -> ResolutionStrategy.HIGHEST_AVAILABLE_STRATEGY
+        }
+
+        return ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                when (aspectRatio) {
+                    AspectRatio.RATIO_16_9 -> AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
+                    AspectRatio.RATIO_4_3 -> AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
+                    else -> AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
+                }
+            )
+            .setResolutionStrategy(resolutionStrategy)
+            .build()
+    }
+
     private fun buildVideoCapture(videoOptions: AndroidVideoOptions?): VideoCapture<Recorder> {
         val recorderBuilder = Recorder.Builder()
         // Aspect ratio is handled by the setViewPort on the UseCaseGroup
-        if (videoOptions?.quality != null) {
-            val quality = when (videoOptions.quality) {
+        if (videoRecordingQuality != null) {
+            val quality = when (videoRecordingQuality) {
                 VideoRecordingQuality.LOWEST -> Quality.LOWEST
                 VideoRecordingQuality.SD -> Quality.SD
                 VideoRecordingQuality.HD -> Quality.HD
@@ -283,7 +305,7 @@ data class CameraXState(
             recorderBuilder.setQualitySelector(
                 QualitySelector.from(
                     quality,
-                    if (videoOptions.fallbackStrategy == QualityFallbackStrategy.LOWER) FallbackStrategy.lowerQualityOrHigherThan(
+                    if (videoOptions?.fallbackStrategy == QualityFallbackStrategy.LOWER) FallbackStrategy.lowerQualityOrHigherThan(
                         quality
                     )
                     else FallbackStrategy.higherQualityOrLowerThan(quality)
@@ -304,6 +326,7 @@ data class CameraXState(
 //        Log.d("SurfaceProviderCamX", "Creating surface provider for $cameraId")
         return Preview.SurfaceProvider { request: SurfaceRequest ->
             val resolution = request.resolution
+            //Log.d("CameraX", "surfaceProvider -> Preview size: width=${resolution.width}, height=${resolution.height}")
             val texture = textureEntries[cameraId]!!.surfaceTexture()
             texture.setDefaultBufferSize(resolution.width, resolution.height)
             val surface = Surface(texture)

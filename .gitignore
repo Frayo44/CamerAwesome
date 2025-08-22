@@ -7,7 +7,15 @@
 
 build/
 test/out/
+android_new/
+example2/
+example/android_old/
 
 test_lab.sh
 firebase_key.txt
 google-services.json
+
+android/gradlew
+android/gradlew.bat
+android/gradle/wrapper/gradle-wrapper.jar
+example/android/app/.cxx/** 

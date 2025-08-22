@@ -80,7 +80,7 @@ enum CamerAwesomePermission {
   storage,
   camera,
   location,
-  record_audio,
+  recordAudio,
 }
 
 enum AnalysisImageFormat {
@@ -122,6 +122,14 @@ class PreviewSize {
       height: result[1]! as double,
     );
   }
+
+  Size toSize() => Size(width, height);
+
+  /// Returns a new [PreviewSize] with [width] and [height] inverted.
+  /// Useful when the preview size is given in portrait mode but the camera
+  /// is in landscape mode.
+  /// Ex : for tablets, the preview size is given in landscape mode but the device is in portrait mode.
+  inverted() => PreviewSize(width: height, height: width);
 }
 
 class ExifPreferences {
@@ -180,12 +188,16 @@ class PigeonSensor {
 class VideoOptions {
   VideoOptions({
     required this.enableAudio,
+    this.quality,
     this.android,
     this.ios,
   });
 
   /// Enable audio while video recording
   bool enableAudio;
+
+  /// The quality of the video recording, defaults to [VideoRecordingQuality.highest].
+  VideoRecordingQuality? quality;
 
   AndroidVideoOptions? android;
 
@@ -194,6 +206,7 @@ class VideoOptions {
   Object encode() {
     return <Object?>[
       enableAudio,
+      quality?.index,
       android?.encode(),
       ios?.encode(),
     ];
@@ -203,11 +216,14 @@ class VideoOptions {
     result as List<Object?>;
     return VideoOptions(
       enableAudio: result[0]! as bool,
-      android: result[1] != null
-          ? AndroidVideoOptions.decode(result[1]! as List<Object?>)
+      quality: result[1] != null
+          ? VideoRecordingQuality.values[result[1]! as int]
           : null,
-      ios: result[2] != null
-          ? CupertinoVideoOptions.decode(result[2]! as List<Object?>)
+      android: result[2] != null
+          ? AndroidVideoOptions.decode(result[2]! as List<Object?>)
+          : null,
+      ios: result[3] != null
+          ? CupertinoVideoOptions.decode(result[3]! as List<Object?>)
           : null,
     );
   }
@@ -216,7 +232,6 @@ class VideoOptions {
 class AndroidVideoOptions {
   AndroidVideoOptions({
     this.bitrate,
-    this.quality,
     this.fallbackStrategy,
   });
 
@@ -224,15 +239,11 @@ class AndroidVideoOptions {
   /// desired.
   int? bitrate;
 
-  /// The quality of the video recording, defaults to [VideoRecordingQuality.highest].
-  VideoRecordingQuality? quality;
-
   QualityFallbackStrategy? fallbackStrategy;
 
   Object encode() {
     return <Object?>[
       bitrate,
-      quality?.index,
       fallbackStrategy?.index,
     ];
   }
@@ -241,11 +252,8 @@ class AndroidVideoOptions {
     result as List<Object?>;
     return AndroidVideoOptions(
       bitrate: result[0] as int?,
-      quality: result[1] != null
-          ? VideoRecordingQuality.values[result[1]! as int]
-          : null,
-      fallbackStrategy: result[2] != null
-          ? QualityFallbackStrategy.values[result[2]! as int]
+      fallbackStrategy: result[1] != null
+          ? QualityFallbackStrategy.values[result[1]! as int]
           : null,
     );
   }
@@ -494,6 +502,7 @@ class AnalysisImageWrapper {
 
 class _AnalysisImageUtilsCodec extends StandardMessageCodec {
   const _AnalysisImageUtilsCodec();
+
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
     if (value is AnalysisImageWrapper) {
@@ -650,6 +659,7 @@ class AnalysisImageUtils {
 
 class _CameraInterfaceCodec extends StandardMessageCodec {
   const _CameraInterfaceCodec();
+
   @override
   void writeValue(WriteBuffer buffer, Object? value) {
     if (value is AndroidFocusSettings) {

@@ -5,6 +5,12 @@ import 'package:camerawesome/pigeon.dart';
 import 'package:camerawesome/src/logger.dart';
 import 'package:camerawesome/src/orchestrator/camera_context.dart';
 
+/// Callback to get the CaptureRequest after the video has been taken
+typedef OnVideoCallback = Function(CaptureRequest request);
+
+/// Callback when video recording failed
+typedef OnVideoFailedCallback = Function(Exception exception);
+
 /// When Camera is in Video mode
 class VideoRecordingCameraState extends CameraState {
   VideoRecordingCameraState({
@@ -22,7 +28,7 @@ class VideoRecordingCameraState extends CameraState {
 
   @override
   void setState(CaptureMode captureMode) {
-    printLog(''' 
+    printLog('''
       warning: You must stop recording before changing state.  
     ''');
   }
@@ -70,18 +76,25 @@ class VideoRecordingCameraState extends CameraState {
 
   // TODO Video recording might end due to other reasons (not enough space left...)
   // CameraAwesome is not notified in these cases atm
-  Future<void> stopRecording() async {
+  Future<void> stopRecording({
+    OnVideoCallback? onVideo,
+    OnVideoFailedCallback? onVideoFailed,
+  }) async {
     var currentCapture = cameraContext.mediaCaptureController.value;
     if (currentCapture == null) {
       return;
     }
     final result = await CamerawesomePlugin.stopRecordingVideo();
     if (result) {
-      _mediaCapture =
-          MediaCapture.success(captureRequest: currentCapture.captureRequest);
+      _mediaCapture = MediaCapture.success(
+        captureRequest: currentCapture.captureRequest,
+      );
+      onVideo?.call(currentCapture.captureRequest);
     } else {
-      _mediaCapture =
-          MediaCapture.failure(captureRequest: currentCapture.captureRequest);
+      _mediaCapture = MediaCapture.failure(
+        captureRequest: currentCapture.captureRequest,
+      );
+      onVideoFailed?.call(Exception("Error while stop recording"));
     }
     await CamerawesomePlugin.setCaptureMode(CaptureMode.video);
     cameraContext.changeState(VideoCameraState.from(cameraContext));
@@ -89,13 +102,12 @@ class VideoRecordingCameraState extends CameraState {
 
   /// If video recording should [enableAudio].
   Future<void> enableAudio(bool enableAudio) async {
-    printLog(''' 
+    printLog('''
       warning: EnableAudio has no effect when recording 
     ''');
   }
 
   /// PRIVATES
-
   set _mediaCapture(MediaCapture media) {
     if (!cameraContext.mediaCaptureController.isClosed) {
       cameraContext.mediaCaptureController.add(media);

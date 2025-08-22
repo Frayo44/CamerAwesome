@@ -1,10 +1,11 @@
 import 'dart:io';
 
-import 'package:better_open_file/better_open_file.dart';
+// import 'package:better_open_file/better_open_file.dart';
 import 'package:camerawesome/camerawesome_plugin.dart';
 import 'package:camerawesome/pigeon.dart';
 import 'package:flutter/material.dart';
 import 'package:path_provider/path_provider.dart';
+import 'utils/file_utils.dart';
 
 void main() {
   runApp(const CameraAwesomeApp());
@@ -31,9 +32,44 @@ class CameraPage extends StatelessWidget {
       body: Container(
         color: Colors.white,
         child: CameraAwesomeBuilder.awesome(
+          onMediaCaptureEvent: (event) {
+            switch ((event.status, event.isPicture, event.isVideo)) {
+              case (MediaCaptureStatus.capturing, true, false):
+                debugPrint('Capturing picture...');
+              case (MediaCaptureStatus.success, true, false):
+                event.captureRequest.when(
+                  single: (single) {
+                    debugPrint('Picture saved: ${single.file?.path}');
+                  },
+                  multiple: (multiple) {
+                    multiple.fileBySensor.forEach((key, value) {
+                      debugPrint('multiple image taken: $key ${value?.path}');
+                    });
+                  },
+                );
+              case (MediaCaptureStatus.failure, true, false):
+                debugPrint('Failed to capture picture: ${event.exception}');
+              case (MediaCaptureStatus.capturing, false, true):
+                debugPrint('Capturing video...');
+              case (MediaCaptureStatus.success, false, true):
+                event.captureRequest.when(
+                  single: (single) {
+                    debugPrint('Video saved: ${single.file?.path}');
+                  },
+                  multiple: (multiple) {
+                    multiple.fileBySensor.forEach((key, value) {
+                      debugPrint('multiple video taken: $key ${value?.path}');
+                    });
+                  },
+                );
+              case (MediaCaptureStatus.failure, false, true):
+                debugPrint('Failed to capture video: ${event.exception}');
+              default:
+                debugPrint('Unknown event: $event');
+            }
+          },
           saveConfig: SaveConfig.photoAndVideo(
             initialCaptureMode: CaptureMode.photo,
-            mirrorFrontCamera: true,
             photoPathBuilder: (sensors) async {
               final Directory extDir = await getTemporaryDirectory();
               final testDir = await Directory(
@@ -43,16 +79,15 @@ class CameraPage extends StatelessWidget {
                 final String filePath =
                     '${testDir.path}/${DateTime.now().millisecondsSinceEpoch}.jpg';
                 return SingleCaptureRequest(filePath, sensors.first);
-              } else {
-                // Separate pictures taken with front and back camera
-                return MultipleCaptureRequest(
-                  {
-                    for (final sensor in sensors)
-                      sensor:
-                          '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
-                  },
-                );
               }
+              // Separate pictures taken with front and back camera
+              return MultipleCaptureRequest(
+                {
+                  for (final sensor in sensors)
+                    sensor:
+                        '${testDir.path}/${sensor.position == SensorPosition.front ? 'front_' : "back_"}${DateTime.now().millisecondsSinceEpoch}.jpg',
+                },
+              );
             },
             videoOptions: VideoOptions(
               enableAudio: true,
@@ -61,7 +96,6 @@ class CameraPage extends StatelessWidget {
               ),
               android: AndroidVideoOptions(
                 bitrate: 6000000,
-                quality: VideoRecordingQuality.fhd,
                 fallbackStrategy: QualityFallbackStrategy.lower,
               ),
             ),
@@ -75,13 +109,23 @@ class CameraPage extends StatelessWidget {
           ),
           enablePhysicalButton: true,
           // filter: AwesomeFilter.AddictiveRed,
-          previewFit: CameraPreviewFit.fitWidth,
+          previewAlignment: Alignment.center,
+          previewFit: CameraPreviewFit.contain,
           onMediaTap: (mediaCapture) {
-            OpenFile.open(
-              mediaCapture.captureRequest
-                  .when(single: (single) => single.file?.path),
+            mediaCapture.captureRequest.when(
+              single: (single) {
+                debugPrint('single: ${single.file?.path}');
+                single.file?.open();
+              },
+              multiple: (multiple) {
+                multiple.fileBySensor.forEach((key, value) {
+                  debugPrint('multiple file taken: $key ${value?.path}');
+                  value?.open();
+                });
+              },
             );
           },
+          availableFilters: awesomePresetFiltersList,
         ),
       ),
     );

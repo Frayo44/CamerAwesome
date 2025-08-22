@@ -1,11 +1,10 @@
 import 'package:camerawesome/camerawesome_plugin.dart';
-import 'package:camerawesome/src/orchestrator/models/filters/awesome_filters.dart';
 import 'package:carousel_slider/carousel_slider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AwesomeFilterSelector extends StatefulWidget {
-  final CameraState state;
+  final PhotoCameraState state;
   final FilterListPosition filterListPosition;
   final Widget indicator;
   final EdgeInsets? filterListPadding;
@@ -25,12 +24,12 @@ class AwesomeFilterSelector extends StatefulWidget {
 }
 
 class _AwesomeFilterSelectorState extends State<AwesomeFilterSelector> {
-  final CarouselController _controller = CarouselController();
+  final CarouselSliderController _controller = CarouselSliderController();
   int? _textureId;
   int _selected = 0;
 
   List<String> get presetsIds =>
-      awesomePresetFiltersList.map((e) => e.id).toList();
+      widget.state.availableFilters!.map((e) => e.id).toList();
 
   @override
   void initState() {
@@ -125,10 +124,9 @@ class _FilterPreview extends StatelessWidget {
   final int? textureId;
 
   const _FilterPreview({
-    Key? key,
     required this.filter,
     required this.textureId,
-  }) : super(key: key);
+  });
 
   @override
   Widget build(BuildContext context) {

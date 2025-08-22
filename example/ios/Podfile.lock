@@ -1,294 +1,118 @@
 PODS:
-  - _NIODataStructures (2.40.0)
-  - better_open_file (0.0.1):
-    - Flutter
   - camerawesome (0.0.1):
     - Flutter
-    - JPSVolumeButtonHandler
-  - CGRPCZlib (1.8.0)
-  - CNIOAtomics (2.40.0)
-  - CNIOBoringSSL (2.19.0)
-  - CNIOBoringSSLShims (2.19.0):
-    - CNIOBoringSSL (= 2.19.0)
-  - CNIODarwin (2.40.0)
-  - CNIOHTTPParser (2.40.0)
-  - CNIOLinux (2.40.0)
-  - CNIOWindows (2.40.0)
+  - CocoaAsyncSocket (7.6.5)
   - Flutter (1.0.0)
-  - google_mlkit_barcode_scanning (0.5.0):
+  - google_mlkit_barcode_scanning (0.14.1):
     - Flutter
     - google_mlkit_commons
-    - GoogleMLKit/BarcodeScanning (~> 3.2.0)
-  - google_mlkit_commons (0.2.0):
+    - GoogleMLKit/BarcodeScanning (~> 7.0.0)
+  - google_mlkit_commons (0.11.0):
     - Flutter
     - MLKitVision
-  - google_mlkit_face_detection (0.5.0):
+  - google_mlkit_face_detection (0.13.1):
     - Flutter
     - google_mlkit_commons
-    - GoogleMLKit/FaceDetection (~> 3.2.0)
-  - google_mlkit_text_recognition (0.5.0):
+    - GoogleMLKit/FaceDetection (~> 7.0.0)
+  - google_mlkit_text_recognition (0.15.0):
     - Flutter
     - google_mlkit_commons
-    - GoogleMLKit/TextRecognition (~> 3.2.0)
-  - GoogleDataTransport (9.2.2):
-    - GoogleUtilities/Environment (~> 7.7)
-    - nanopb (< 2.30910.0, >= 2.30908.0)
-    - PromisesObjC (< 3.0, >= 1.2)
-  - GoogleMLKit/BarcodeScanning (3.2.0):
+    - GoogleMLKit/TextRecognition (~> 7.0.0)
+  - GoogleDataTransport (10.1.0):
+    - nanopb (~> 3.30910.0)
+    - PromisesObjC (~> 2.4)
+  - GoogleMLKit/BarcodeScanning (7.0.0):
     - GoogleMLKit/MLKitCore
-    - MLKitBarcodeScanning (~> 2.2.0)
-  - GoogleMLKit/FaceDetection (3.2.0):
+    - MLKitBarcodeScanning (~> 6.0.0)
+  - GoogleMLKit/FaceDetection (7.0.0):
     - GoogleMLKit/MLKitCore
-    - MLKitFaceDetection (~> 2.2.0)
-  - GoogleMLKit/MLKitCore (3.2.0):
-    - MLKitCommon (~> 8.0.0)
-  - GoogleMLKit/TextRecognition (3.2.0):
+    - MLKitFaceDetection (~> 6.0.0)
+  - GoogleMLKit/MLKitCore (7.0.0):
+    - MLKitCommon (~> 12.0.0)
+  - GoogleMLKit/TextRecognition (7.0.0):
     - GoogleMLKit/MLKitCore
-    - MLKitTextRecognition (~> 1.4.0-beta6)
-  - GoogleToolboxForMac/DebugUtils (2.3.2):
-    - GoogleToolboxForMac/Defines (= 2.3.2)
-  - GoogleToolboxForMac/Defines (2.3.2)
-  - GoogleToolboxForMac/Logger (2.3.2):
-    - GoogleToolboxForMac/Defines (= 2.3.2)
-  - "GoogleToolboxForMac/NSData+zlib (2.3.2)":
-    - GoogleToolboxForMac/Defines (= 2.3.2)
-  - "GoogleToolboxForMac/NSDictionary+URLArguments (2.3.2)":
-    - GoogleToolboxForMac/DebugUtils (= 2.3.2)
-    - GoogleToolboxForMac/Defines (= 2.3.2)
-    - "GoogleToolboxForMac/NSString+URLArguments (= 2.3.2)"
-  - "GoogleToolboxForMac/NSString+URLArguments (2.3.2)"
-  - GoogleUtilities/Environment (7.11.1):
-    - PromisesObjC (< 3.0, >= 1.2)
-  - GoogleUtilities/Logger (7.11.1):
+    - MLKitTextRecognition (~> 5.0.0)
+  - GoogleToolboxForMac/Defines (4.2.1)
+  - GoogleToolboxForMac/Logger (4.2.1):
+    - GoogleToolboxForMac/Defines (= 4.2.1)
+  - "GoogleToolboxForMac/NSData+zlib (4.2.1)":
+    - GoogleToolboxForMac/Defines (= 4.2.1)
+  - GoogleUtilities/Environment (8.0.2):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Logger (8.0.2):
     - GoogleUtilities/Environment
-  - GoogleUtilities/UserDefaults (7.11.1):
+    - GoogleUtilities/Privacy
+  - GoogleUtilities/Privacy (8.0.2)
+  - GoogleUtilities/UserDefaults (8.0.2):
     - GoogleUtilities/Logger
-  - GoogleUtilitiesComponents (1.1.0):
-    - GoogleUtilities/Logger
-  - gRPC-Swift (1.8.0):
-    - CGRPCZlib (= 1.8.0)
-    - Logging (< 2.0.0, >= 1.4.0)
-    - SwiftNIO (< 3.0.0, >= 2.32.0)
-    - SwiftNIOExtras (< 2.0.0, >= 1.4.0)
-    - SwiftNIOHTTP2 (< 2.0.0, >= 1.22.0)
-    - SwiftNIOSSL (< 3.0.0, >= 2.14.0)
-    - SwiftNIOTransportServices (< 2.0.0, >= 1.11.1)
-    - SwiftProtobuf (< 2.0.0, >= 1.19.0)
-  - GTMSessionFetcher/Core (1.7.2)
-  - integration_test (0.0.1):
+    - GoogleUtilities/Privacy
+  - GTMSessionFetcher/Core (3.5.0)
+  - MLImage (1.0.0-beta6)
+  - MLKitBarcodeScanning (6.0.0):
+    - MLKitCommon (~> 12.0)
+    - MLKitVision (~> 8.0)
+  - MLKitCommon (12.0.0):
+    - GoogleDataTransport (~> 10.0)
+    - GoogleToolboxForMac/Logger (< 5.0, >= 4.2.1)
+    - "GoogleToolboxForMac/NSData+zlib (< 5.0, >= 4.2.1)"
+    - GoogleUtilities/Logger (~> 8.0)
+    - GoogleUtilities/UserDefaults (~> 8.0)
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3.2)
+  - MLKitFaceDetection (6.0.0):
+    - MLKitCommon (~> 12.0)
+    - MLKitVision (~> 8.0)
+  - MLKitTextRecognition (5.0.0):
+    - MLKitCommon (~> 12.0)
+    - MLKitTextRecognitionCommon (= 4.0.0)
+    - MLKitVision (~> 8.0)
+  - MLKitTextRecognitionCommon (4.0.0):
+    - MLKitCommon (~> 12.0)
+    - MLKitVision (~> 8.0)
+  - MLKitVision (8.0.0):
+    - GoogleToolboxForMac/Logger (< 5.0, >= 4.2.1)
+    - "GoogleToolboxForMac/NSData+zlib (< 5.0, >= 4.2.1)"
+    - GTMSessionFetcher/Core (< 4.0, >= 3.3.2)
+    - MLImage (= 1.0.0-beta6)
+    - MLKitCommon (~> 12.0)
+  - nanopb (3.30910.0):
+    - nanopb/decode (= 3.30910.0)
+    - nanopb/encode (= 3.30910.0)
+  - nanopb/decode (3.30910.0)
+  - nanopb/encode (3.30910.0)
+  - open_filex (0.0.2):
     - Flutter
-  - JPSVolumeButtonHandler (1.0.5)
-  - Logging (1.4.0)
-  - MLImage (1.0.0-beta3)
-  - MLKitBarcodeScanning (2.2.0):
-    - MLKitCommon (~> 8.0)
-    - MLKitVision (~> 4.2)
-  - MLKitCommon (8.0.0):
-    - GoogleDataTransport (~> 9.0)
-    - GoogleToolboxForMac/Logger (~> 2.1)
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
-    - "GoogleToolboxForMac/NSDictionary+URLArguments (~> 2.1)"
-    - GoogleUtilities/UserDefaults (~> 7.0)
-    - GoogleUtilitiesComponents (~> 1.0)
-    - GTMSessionFetcher/Core (~> 1.1)
-    - Protobuf (~> 3.12)
-  - MLKitFaceDetection (2.2.0):
-    - MLKitCommon (~> 8.0)
-    - MLKitVision (~> 4.2)
-  - MLKitTextRecognition (1.4.0-beta6):
-    - MLKitCommon (~> 8.0)
-    - MLKitTextRecognitionCommon (= 1.0.0-beta6)
-    - MLKitVision (~> 4.2)
-  - MLKitTextRecognitionCommon (1.0.0-beta6):
-    - MLKitCommon (~> 8.0)
-    - MLKitVision (~> 4.2)
-  - MLKitVision (4.2.0):
-    - GoogleToolboxForMac/Logger (~> 2.1)
-    - "GoogleToolboxForMac/NSData+zlib (~> 2.1)"
-    - GTMSessionFetcher/Core (~> 1.1)
-    - MLImage (= 1.0.0-beta3)
-    - MLKitCommon (~> 8.0)
-    - Protobuf (~> 3.12)
-  - nanopb (2.30909.0):
-    - nanopb/decode (= 2.30909.0)
-    - nanopb/encode (= 2.30909.0)
-  - nanopb/decode (2.30909.0)
-  - nanopb/encode (2.30909.0)
   - path_provider_foundation (0.0.1):
     - Flutter
     - FlutterMacOS
   - patrol (0.0.1):
+    - CocoaAsyncSocket (~> 7.6)
     - Flutter
-    - gRPC-Swift (~> 1.8.0)
-  - PromisesObjC (2.2.0)
-  - Protobuf (3.22.3)
-  - SwiftNIO (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIODarwin (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - CNIOWindows (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-    - SwiftNIOEmbedded (= 2.40.0)
-    - SwiftNIOPosix (= 2.40.0)
-  - SwiftNIOConcurrencyHelpers (2.40.0):
-    - CNIOAtomics (= 2.40.0)
-  - SwiftNIOCore (2.40.0):
-    - CNIOAtomics (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-  - SwiftNIOEmbedded (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-  - SwiftNIOExtras (1.11.0):
-    - _NIODataStructures (< 3, >= 2.32.0)
-    - CNIOAtomics (< 3, >= 2.32.0)
-    - CNIODarwin (< 3, >= 2.32.0)
-    - CNIOLinux (< 3, >= 2.32.0)
-    - CNIOWindows (< 3, >= 2.32.0)
-    - SwiftNIO (< 3, >= 2.32.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.32.0)
-    - SwiftNIOCore (< 3, >= 2.32.0)
-    - SwiftNIOEmbedded (< 3, >= 2.32.0)
-    - SwiftNIOPosix (< 3, >= 2.32.0)
-  - SwiftNIOFoundationCompat (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIODarwin (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - CNIOWindows (= 2.40.0)
-    - SwiftNIO (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-    - SwiftNIOEmbedded (= 2.40.0)
-    - SwiftNIOPosix (= 2.40.0)
-  - SwiftNIOHPACK (1.22.0):
-    - _NIODataStructures (< 3, >= 2.35.0)
-    - CNIOAtomics (< 3, >= 2.35.0)
-    - CNIODarwin (< 3, >= 2.35.0)
-    - CNIOHTTPParser (< 3, >= 2.35.0)
-    - CNIOLinux (< 3, >= 2.35.0)
-    - CNIOWindows (< 3, >= 2.35.0)
-    - SwiftNIO (< 3, >= 2.35.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.35.0)
-    - SwiftNIOCore (< 3, >= 2.35.0)
-    - SwiftNIOEmbedded (< 3, >= 2.35.0)
-    - SwiftNIOHTTP1 (< 3, >= 2.35.0)
-    - SwiftNIOPosix (< 3, >= 2.35.0)
-  - SwiftNIOHTTP1 (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIODarwin (= 2.40.0)
-    - CNIOHTTPParser (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - CNIOWindows (= 2.40.0)
-    - SwiftNIO (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-    - SwiftNIOEmbedded (= 2.40.0)
-    - SwiftNIOPosix (= 2.40.0)
-  - SwiftNIOHTTP2 (1.22.0):
-    - _NIODataStructures (< 3, >= 2.35.0)
-    - CNIOAtomics (< 3, >= 2.35.0)
-    - CNIODarwin (< 3, >= 2.35.0)
-    - CNIOHTTPParser (< 3, >= 2.35.0)
-    - CNIOLinux (< 3, >= 2.35.0)
-    - CNIOWindows (< 3, >= 2.35.0)
-    - SwiftNIO (< 3, >= 2.35.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.35.0)
-    - SwiftNIOCore (< 3, >= 2.35.0)
-    - SwiftNIOEmbedded (< 3, >= 2.35.0)
-    - SwiftNIOHPACK (= 1.22.0)
-    - SwiftNIOHTTP1 (< 3, >= 2.35.0)
-    - SwiftNIOPosix (< 3, >= 2.35.0)
-    - SwiftNIOTLS (< 3, >= 2.35.0)
-  - SwiftNIOPosix (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIODarwin (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - CNIOWindows (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-  - SwiftNIOSSL (2.19.0):
-    - _NIODataStructures (< 3, >= 2.32.0)
-    - CNIOAtomics (< 3, >= 2.32.0)
-    - CNIOBoringSSL (= 2.19.0)
-    - CNIOBoringSSLShims (= 2.19.0)
-    - CNIODarwin (< 3, >= 2.32.0)
-    - CNIOLinux (< 3, >= 2.32.0)
-    - CNIOWindows (< 3, >= 2.32.0)
-    - SwiftNIO (< 3, >= 2.32.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.32.0)
-    - SwiftNIOCore (< 3, >= 2.32.0)
-    - SwiftNIOEmbedded (< 3, >= 2.32.0)
-    - SwiftNIOPosix (< 3, >= 2.32.0)
-    - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftNIOTLS (2.40.0):
-    - _NIODataStructures (= 2.40.0)
-    - CNIOAtomics (= 2.40.0)
-    - CNIODarwin (= 2.40.0)
-    - CNIOLinux (= 2.40.0)
-    - CNIOWindows (= 2.40.0)
-    - SwiftNIO (= 2.40.0)
-    - SwiftNIOConcurrencyHelpers (= 2.40.0)
-    - SwiftNIOCore (= 2.40.0)
-    - SwiftNIOEmbedded (= 2.40.0)
-    - SwiftNIOPosix (= 2.40.0)
-  - SwiftNIOTransportServices (1.12.0):
-    - _NIODataStructures (< 3, >= 2.32.0)
-    - CNIOAtomics (< 3, >= 2.32.0)
-    - CNIODarwin (< 3, >= 2.32.0)
-    - CNIOLinux (< 3, >= 2.32.0)
-    - CNIOWindows (< 3, >= 2.32.0)
-    - SwiftNIO (< 3, >= 2.32.0)
-    - SwiftNIOConcurrencyHelpers (< 3, >= 2.32.0)
-    - SwiftNIOCore (< 3, >= 2.32.0)
-    - SwiftNIOEmbedded (< 3, >= 2.32.0)
-    - SwiftNIOFoundationCompat (< 3, >= 2.32.0)
-    - SwiftNIOPosix (< 3, >= 2.32.0)
-    - SwiftNIOTLS (< 3, >= 2.32.0)
-  - SwiftProtobuf (1.21.0)
+    - FlutterMacOS
+  - PromisesObjC (2.4.0)
   - video_player_avfoundation (0.0.1):
     - Flutter
+    - FlutterMacOS
 
 DEPENDENCIES:
-  - better_open_file (from `.symlinks/plugins/better_open_file/ios`)
   - camerawesome (from `.symlinks/plugins/camerawesome/ios`)
   - Flutter (from `Flutter`)
   - google_mlkit_barcode_scanning (from `.symlinks/plugins/google_mlkit_barcode_scanning/ios`)
   - google_mlkit_commons (from `.symlinks/plugins/google_mlkit_commons/ios`)
   - google_mlkit_face_detection (from `.symlinks/plugins/google_mlkit_face_detection/ios`)
   - google_mlkit_text_recognition (from `.symlinks/plugins/google_mlkit_text_recognition/ios`)
-  - integration_test (from `.symlinks/plugins/integration_test/ios`)
+  - open_filex (from `.symlinks/plugins/open_filex/ios`)
   - path_provider_foundation (from `.symlinks/plugins/path_provider_foundation/darwin`)
-  - patrol (from `.symlinks/plugins/patrol/ios`)
-  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/ios`)
+  - patrol (from `.symlinks/plugins/patrol/darwin`)
+  - video_player_avfoundation (from `.symlinks/plugins/video_player_avfoundation/darwin`)
 
 SPEC REPOS:
   trunk:
-    - _NIODataStructures
-    - CGRPCZlib
-    - CNIOAtomics
-    - CNIOBoringSSL
-    - CNIOBoringSSLShims
-    - CNIODarwin
-    - CNIOHTTPParser
-    - CNIOLinux
-    - CNIOWindows
+    - CocoaAsyncSocket
     - GoogleDataTransport
     - GoogleMLKit
     - GoogleToolboxForMac
     - GoogleUtilities
-    - GoogleUtilitiesComponents
-    - gRPC-Swift
     - GTMSessionFetcher
-    - JPSVolumeButtonHandler
-    - Logging
     - MLImage
     - MLKitBarcodeScanning
     - MLKitCommon
@@ -298,25 +122,8 @@ SPEC REPOS:
     - MLKitVision
     - nanopb
     - PromisesObjC
-    - Protobuf
-    - SwiftNIO
-    - SwiftNIOConcurrencyHelpers
-    - SwiftNIOCore
-    - SwiftNIOEmbedded
-    - SwiftNIOExtras
-    - SwiftNIOFoundationCompat
-    - SwiftNIOHPACK
-    - SwiftNIOHTTP1
-    - SwiftNIOHTTP2
-    - SwiftNIOPosix
-    - SwiftNIOSSL
-    - SwiftNIOTLS
-    - SwiftNIOTransportServices
-    - SwiftProtobuf
 
 EXTERNAL SOURCES:
-  better_open_file:
-    :path: ".symlinks/plugins/better_open_file/ios"
   camerawesome:
     :path: ".symlinks/plugins/camerawesome/ios"
   Flutter:
@@ -329,70 +136,42 @@ EXTERNAL SOURCES:
     :path: ".symlinks/plugins/google_mlkit_face_detection/ios"
   google_mlkit_text_recognition:
     :path: ".symlinks/plugins/google_mlkit_text_recognition/ios"
-  integration_test:
-    :path: ".symlinks/plugins/integration_test/ios"
+  open_filex:
+    :path: ".symlinks/plugins/open_filex/ios"
   path_provider_foundation:
     :path: ".symlinks/plugins/path_provider_foundation/darwin"
   patrol:
-    :path: ".symlinks/plugins/patrol/ios"
+    :path: ".symlinks/plugins/patrol/darwin"
   video_player_avfoundation:
-    :path: ".symlinks/plugins/video_player_avfoundation/ios"
+    :path: ".symlinks/plugins/video_player_avfoundation/darwin"
 
 SPEC CHECKSUMS:
-  _NIODataStructures: 3d45d8e70a1d17a15b1dc59d102c63dbc0525ffd
-  better_open_file: 03cf320415d4d3f46b6e00adc4a567d76c1a399d
-  camerawesome: 1e06540f60158809bc70f398ed1ac2cf93fe4188
-  CGRPCZlib: 298dd3237ba4bd7b3eed109e7080ff3324b7d9c9
-  CNIOAtomics: 8edf08644e5e6fa0f021c239be9e8beb1cd9ef18
-  CNIOBoringSSL: 2c9c96c2e95f15e83fb8d26b9738d939cc39ae33
-  CNIOBoringSSLShims: c5c9346e7bbd1040f4f8793a35441dda7487539a
-  CNIODarwin: 93850990d29f2626b05306c6c9309f9be0d74c2f
-  CNIOHTTPParser: 8ce395236fa1d09ac3b4f4bcfba79b849b2ac684
-  CNIOLinux: 62e3505f50de558c393dc2f273dde71dcce518da
-  CNIOWindows: 3047f2d8165848a3936a0a755fee27c6b5ee479b
-  Flutter: f04841e97a9d0b0a8025694d0796dd46242b2854
-  google_mlkit_barcode_scanning: 5c18504510a7b3a326c2ab19758457633248b7b6
-  google_mlkit_commons: e9070f57232c3a3e4bd42fdfa621bb1f4bb3e709
-  google_mlkit_face_detection: ab4c98846c4e9b0d48e5bd386cedb14feb676802
-  google_mlkit_text_recognition: 9967360384e93b09686aca67fc9f13f9a957d770
-  GoogleDataTransport: 8378d1fa8ac49753ea6ce70d65a7cb70ce5f66e6
-  GoogleMLKit: 0017a6a8372e1a182139b9def4d89be5d87ca5a7
-  GoogleToolboxForMac: 8bef7c7c5cf7291c687cf5354f39f9db6399ad34
-  GoogleUtilities: 9aa0ad5a7bc171f8bae016300bfcfa3fb8425749
-  GoogleUtilitiesComponents: 679b2c881db3b615a2777504623df6122dd20afe
-  gRPC-Swift: 74adcaaa62ac5e0a018938840328cb1fdfb09e7b
-  GTMSessionFetcher: 5595ec75acf5be50814f81e9189490412bad82ba
-  integration_test: 13825b8a9334a850581300559b8839134b124670
-  JPSVolumeButtonHandler: 53110330c9168ed325def93eabff39f0fe3e8082
-  Logging: beeb016c9c80cf77042d62e83495816847ef108b
-  MLImage: 489dfec109f21da8621b28d476401aaf7a0d4ff4
-  MLKitBarcodeScanning: d92fe1911001ec36870162c5a0eb206f612b7169
-  MLKitCommon: f6da6c5659618c070b50a80db01248ebe2964175
-  MLKitFaceDetection: 9f29d8d0bb38911281407e24e74d2e5da812ba8d
-  MLKitTextRecognition: f6fda8923564f6cebe2bb952a1adb0414e1d731b
-  MLKitTextRecognitionCommon: 0c720ee45ffedb3a34f0e8b95764d2f57a108e71
-  MLKitVision: 96c96571190b7f63eddf4a12068ce8a8689e0d2c
-  nanopb: b552cce312b6c8484180ef47159bc0f65a1f0431
-  path_provider_foundation: c68054786f1b4f3343858c1e1d0caaded73f0be9
-  patrol: a7622350c42b3a944962fbfe052d07e3691789e5
-  PromisesObjC: 09985d6d70fbe7878040aa746d78236e6946d2ef
-  Protobuf: d03938d5f7e974a97964fb0567771e36fbe9ecce
-  SwiftNIO: 829958aab300642625091f82fc2f49cb7cf4ef24
-  SwiftNIOConcurrencyHelpers: 697370136789b1074e4535eaae75cbd7f900370e
-  SwiftNIOCore: 473fdfe746534d7aa25766916459eeaf6f92ef49
-  SwiftNIOEmbedded: ffcb5147db67d9686c8366b7f8427b36132f2c8a
-  SwiftNIOExtras: 481f74d6bf0b0ef699905ed66439cb019c4975c9
-  SwiftNIOFoundationCompat: b9cdbea4806e4a12e9f66d9696fa3b98c4c3232b
-  SwiftNIOHPACK: e7d3ff5bd671528adfb11cd4e0c84ddfdc3c4453
-  SwiftNIOHTTP1: ef56706550a1dc135ea69d65215b9941e643c23b
-  SwiftNIOHTTP2: cc81d7a6ba70d2ddc5376f471904b27ef5d2b7b8
-  SwiftNIOPosix: b49af4bdbecaadfadd5c93dfe28594d6722b75e4
-  SwiftNIOSSL: d153c5a6fc5b2301b0519b4c4d037a9414212da6
-  SwiftNIOTLS: 598af547490133e9aac52aed0c23c4a90c31dcfc
-  SwiftNIOTransportServices: 0b2b407819d82eb63af558c5396e33c945759503
-  SwiftProtobuf: afced68785854575756db965e9da52bbf3dc45e7
-  video_player_avfoundation: e489aac24ef5cf7af82702979ed16f2a5ef84cff
+  camerawesome: a961fa32dafc00d2f093d824311c84f849586b58
+  CocoaAsyncSocket: 065fd1e645c7abab64f7a6a2007a48038fdc6a99
+  Flutter: e0871f40cf51350855a761d2e70bf5af5b9b5de7
+  google_mlkit_barcode_scanning: 8f5987f244a43fe1167689c548342a5174108159
+  google_mlkit_commons: 2abe6a70e1824e431d16a51085cb475b672c8aab
+  google_mlkit_face_detection: 754da2113a1952f063c7c5dc347ac6ae8934fb77
+  google_mlkit_text_recognition: ec2122ec89bfe0d7200763336a6e4ef44810674c
+  GoogleDataTransport: aae35b7ea0c09004c3797d53c8c41f66f219d6a7
+  GoogleMLKit: eff9e23ec1d90ea4157a1ee2e32a4f610c5b3318
+  GoogleToolboxForMac: d1a2cbf009c453f4d6ded37c105e2f67a32206d8
+  GoogleUtilities: 26a3abef001b6533cf678d3eb38fd3f614b7872d
+  GTMSessionFetcher: 5aea5ba6bd522a239e236100971f10cb71b96ab6
+  MLImage: 0ad1c5f50edd027672d8b26b0fee78a8b4a0fc56
+  MLKitBarcodeScanning: 0a3064da0a7f49ac24ceb3cb46a5bc67496facd2
+  MLKitCommon: 07c2c33ae5640e5380beaaa6e4b9c249a205542d
+  MLKitFaceDetection: 2a593db4837db503ad3426b565e7aab045cefea5
+  MLKitTextRecognition: 3b41f3ff084a79afb214408d25d2068d77ab322c
+  MLKitTextRecognitionCommon: cd44577a8c506fc6bba065096de03bec0d01a213
+  MLKitVision: 45e79d68845a2de77e2dd4d7f07947f0ed157b0e
+  nanopb: fad817b59e0457d11a5dfbde799381cd727c1275
+  open_filex: 432f3cd11432da3e39f47fcc0df2b1603854eff1
+  path_provider_foundation: 080d55be775b7414fd5a5ef3ac137b97b097e564
+  patrol: dd82ffedfee3aba87c1d0ed2daad0b77bfb8ee1f
+  PromisesObjC: f5707f49cb48b9636751c5b2e7d227e43fba9f47
+  video_player_avfoundation: 2cef49524dd1f16c5300b9cd6efd9611ce03639b
 
-PODFILE CHECKSUM: a8b143db2d88d9458665bb11a320e286001a8119
+PODFILE CHECKSUM: dabefdfdd2f64e884a9feb5996b51b7bfc7404d3
 
-COCOAPODS: 1.12.0
+COCOAPODS: 1.16.2
