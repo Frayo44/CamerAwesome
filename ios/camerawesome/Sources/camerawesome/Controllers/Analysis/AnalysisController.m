@@ -11,28 +11,21 @@
 
 + (void)bgra8888toJpegBgra8888image:(nonnull AnalysisImageWrapper *)bgra8888image jpegQuality:(nonnull NSNumber *)jpegQuality completion:(nonnull void (^)(AnalysisImageWrapper * _Nullable, FlutterError * _Nullable))completion {
   NSData *bgra8888Data = bgra8888image.bytes.data;
-  NSMutableData *mutableData = [bgra8888Data mutableCopy];
-  uint8_t *pixels = (uint8_t *)mutableData.mutableBytes;
-  
-// Swap red and blue channels
-for (NSUInteger i = 0; i < mutableData.length; i += 4) {
-  uint8_t temp = pixels[i]; // Blue
-  pixels[i] = pixels[i + 2]; // Red
-  pixels[i + 2] = temp; // Blue
-}
-
-  CFDataRef cfData = (__bridge CFDataRef)mutableData;
+  CFDataRef cfData = (__bridge CFDataRef)bgra8888Data;
   CGDataProviderRef dataProvider = CGDataProviderCreateWithCFData(cfData);
-  
+
   CGColorSpaceRef colorSpace = CGColorSpaceCreateDeviceRGB();
+  // BGRA in memory is ARGB read as a little-endian 32-bit word; declaring it
+  // this way lets CoreGraphics read the buffer natively (no per-pixel swap).
+  // Camera frames are opaque, so the alpha byte is skipped rather than used.
   CGImageRef cgImage = CGImageCreate(bgra8888image.width.intValue,
                                      bgra8888image.height.intValue,
                                      8,
                                      32,
                                      [bgra8888image.planes.firstObject.bytesPerRow intValue],
                                      colorSpace,
-                                     kCGBitmapByteOrder32Big |
-                                     kCGImageAlphaPremultipliedLast,
+                                     kCGBitmapByteOrder32Little |
+                                     kCGImageAlphaNoneSkipFirst,
                                      dataProvider,
                                      NULL,
                                      true,
