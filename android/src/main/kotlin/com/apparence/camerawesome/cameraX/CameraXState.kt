@@ -239,34 +239,52 @@ data class CameraXState(
 
 
             val addAnalysisUseCase = enableImageStream && imageAnalysisBuilder != null
-            val cameraLevel = CameraCapabilities.getCameraLevel(
-                cameraSelector, cameraProvider
-            )
             cameraProvider.unbindAll()
-            if (addAnalysisUseCase) {
-                if (currentCaptureMode == CaptureModes.VIDEO && cameraLevel < CameraCharacteristics.INFO_SUPPORTED_HARDWARE_LEVEL_3) {
-                    Log.w(
-                        CamerawesomePlugin.TAG,
-                        "Trying to bind too many use cases for this device (level $cameraLevel), ignoring image analysis"
-                    )
-                } else {
-                    imageAnalysis = imageAnalysisBuilder!!.build()
-                    useCaseGroupBuilder.addUseCase(imageAnalysis!!)
-
-                }
-            } else {
-                imageAnalysis = null
-            }
+            imageAnalysis = if (addAnalysisUseCase) imageAnalysisBuilder!!.build() else null
             // TODO Orientation might be wrong, to be verified
             useCaseGroupBuilder.setViewPort(ViewPort.Builder(rational, Surface.ROTATION_0).build())
-                .build()
+            val baseGroup = useCaseGroupBuilder.build()
 
             concurrentCamera = null
-            previewCamera = cameraProvider.bindToLifecycle(
-                activity as LifecycleOwner,
-                cameraSelector,
-                useCaseGroupBuilder.build(),
-            )
+            val analysis = imageAnalysis
+            previewCamera = if (analysis != null) {
+                // Since CameraX 1.3, StreamSharing resolves use-case combinations
+                // beyond the camera2 guaranteed tables (e.g. Preview + VideoCapture
+                // + ImageAnalysis on sub-LEVEL_3 devices), so bind optimistically
+                // instead of pre-gating on hardware level. If this device truly
+                // cannot support the combination, fall back to binding without
+                // image analysis (the old behavior).
+                val withAnalysis = UseCaseGroup.Builder().apply {
+                    baseGroup.viewPort?.let { setViewPort(it) }
+                    baseGroup.useCases.forEach { addUseCase(it) }
+                    addUseCase(analysis)
+                }.build()
+                try {
+                    cameraProvider.bindToLifecycle(
+                        activity as LifecycleOwner,
+                        cameraSelector,
+                        withAnalysis,
+                    )
+                } catch (e: IllegalArgumentException) {
+                    Log.w(
+                        CamerawesomePlugin.TAG,
+                        "Use-case combination with image analysis not supported on this device, retrying without it: $e"
+                    )
+                    imageAnalysis = null
+                    cameraProvider.unbindAll()
+                    cameraProvider.bindToLifecycle(
+                        activity as LifecycleOwner,
+                        cameraSelector,
+                        baseGroup,
+                    )
+                }
+            } else {
+                cameraProvider.bindToLifecycle(
+                    activity as LifecycleOwner,
+                    cameraSelector,
+                    baseGroup,
+                )
+            }
             previewCamera!!.cameraControl.enableTorch(flashMode == FlashMode.ALWAYS)
         }
     }
