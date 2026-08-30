@@ -42,6 +42,12 @@
   [_captureVideoOutput setSampleBufferDelegate:self queue:dispatch_get_main_queue()];
   [_captureSession addOutputWithNoConnections:_captureVideoOutput];
   
+  // Recover from system interruptions (audio-session activation, phone
+  // calls, Control Center...) instead of silently freezing the preview.
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionWasInterrupted:) name:AVCaptureSessionWasInterruptedNotification object:_captureSession];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionInterruptionEnded:) name:AVCaptureSessionInterruptionEndedNotification object:_captureSession];
+  [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(sessionRuntimeError:) name:AVCaptureSessionRuntimeErrorNotification object:_captureSession];
+  
   [self initCameraPreview:sensor];
   
   [_captureConnection setAutomaticallyAdjustsVideoMirroring:NO];
@@ -169,7 +175,30 @@
 }
 
 - (void)dealloc {
+  [[NSNotificationCenter defaultCenter] removeObserver:self];
   [self.motionController startMotionDetection];
+}
+
+- (void)sessionWasInterrupted:(NSNotification *)notification {
+  NSLog(@"[camerawesome] capture session interrupted (reason %@)", notification.userInfo[AVCaptureSessionInterruptionReasonKey]);
+}
+
+- (void)sessionInterruptionEnded:(NSNotification *)notification {
+  NSLog(@"[camerawesome] capture session interruption ended, restarting");
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    if (!self->_captureSession.isRunning) {
+      [self->_captureSession startRunning];
+    }
+  });
+}
+
+- (void)sessionRuntimeError:(NSNotification *)notification {
+  NSLog(@"[camerawesome] capture session runtime error: %@", notification.userInfo[AVCaptureSessionErrorKey]);
+  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    if (!self->_captureSession.isRunning) {
+      [self->_captureSession startRunning];
+    }
+  });
 }
 
 /// Set camera preview size
@@ -477,12 +506,12 @@
   }
   
   _captureMode = captureMode;
-  
-  if (captureMode == Video) {
-    [self setUpCaptureSessionForAudioError:^(NSError *audioError) {
-      *error = [FlutterError errorWithCode:@"VIDEO_ERROR" message:@"error when trying to setup audio" details:[audioError localizedDescription]];
-    }];
-  }
+  // NOTE: audio input/output are NOT attached here anymore. Attaching the
+  // microphone to the running session on a mere mode switch can interrupt
+  // the session (freezing the live preview) and lights the mic privacy
+  // indicator before any recording exists. VideoController attaches audio
+  // lazily at record start (audioSetupCallback), which already handles the
+  // not-yet-setup case.
 }
 
 - (void)refresh {
@@ -603,6 +632,16 @@
 /// Setup audio channel to record audio
 - (void)setUpCaptureSessionForAudioError:(nonnull void (^)(NSError *))error {
   NSError *audioError = nil;
+
+  // Configure the shared audio session cooperatively BEFORE the mic input is
+  // attached, and stop AVFoundation from reconfiguring it behind our back -
+  // an uncooperative activation here can interrupt the whole capture session
+  // (and with it the live preview).
+  _captureSession.automaticallyConfiguresApplicationAudioSession = NO;
+  [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
+                                   withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth
+                                         error:nil];
+
   // Create a device input with the device and add it to the session.
   // Setup the audio input.
   AVCaptureDevice *audioDevice = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeAudio];
@@ -615,6 +654,7 @@
   // Setup the audio output.
   _audioOutput = [[AVCaptureAudioDataOutput alloc] init];
   
+  [_captureSession beginConfiguration];
   if ([_captureSession canAddInput:audioInput]) {
     [_captureSession addInput:audioInput];
     
@@ -625,6 +665,7 @@
       [_videoController setIsAudioSetup:NO];
     }
   }
+  [_captureSession commitConfiguration];
 }
 
 # pragma mark - Camera Delegates
