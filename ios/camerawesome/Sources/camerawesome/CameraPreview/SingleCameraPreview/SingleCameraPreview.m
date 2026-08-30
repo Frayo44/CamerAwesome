@@ -506,12 +506,16 @@
   }
   
   _captureMode = captureMode;
-  // NOTE: audio input/output are NOT attached here anymore. Attaching the
-  // microphone to the running session on a mere mode switch can interrupt
-  // the session (freezing the live preview) and lights the mic privacy
-  // indicator before any recording exists. VideoController attaches audio
-  // lazily at record start (audioSetupCallback), which already handles the
-  // not-yet-setup case.
+  // Attach audio when ENTERING video mode (guarded + config-wrapped): doing
+  // it here keeps the actual record start free of session reconfiguration -
+  // attaching lazily at record start disrupted the first recording (started
+  // and immediately stopped). The record-start path still attaches as a
+  // fallback when this didn't run.
+  if (captureMode == Video && !_videoController.isAudioSetup) {
+    [self setUpCaptureSessionForAudioError:^(NSError *audioError) {
+      *error = [FlutterError errorWithCode:@"VIDEO_ERROR" message:@"error when trying to setup audio" details:[audioError localizedDescription]];
+    }];
+  }
 }
 
 - (void)refresh {
