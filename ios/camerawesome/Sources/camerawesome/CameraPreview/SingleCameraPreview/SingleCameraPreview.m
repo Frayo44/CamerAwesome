@@ -637,14 +637,12 @@
 - (void)setUpCaptureSessionForAudioError:(nonnull void (^)(NSError *))error {
   NSError *audioError = nil;
 
-  // Configure the shared audio session cooperatively BEFORE the mic input is
-  // attached, and stop AVFoundation from reconfiguring it behind our back -
-  // an uncooperative activation here can interrupt the whole capture session
-  // (and with it the live preview).
-  _captureSession.automaticallyConfiguresApplicationAudioSession = NO;
-  [[AVAudioSession sharedInstance] setCategory:AVAudioSessionCategoryPlayAndRecord
-                                   withOptions:AVAudioSessionCategoryOptionMixWithOthers | AVAudioSessionCategoryOptionDefaultToSpeaker | AVAudioSessionCategoryOptionAllowBluetooth
-                                         error:nil];
+  // NOTE: do NOT touch the shared AVAudioSession category here. Volume-based
+  // shutter plugins (e.g. volume_key_board) watch outputVolume, and a manual
+  // category/route change fires a spurious volume event - which host apps
+  // may interpret as a shutter press (auto-start on mode switch, instant
+  // stop at record start). AVFoundation's automatic audio-session
+  // management handles the category itself and has proven safe.
 
   // Create a device input with the device and add it to the session.
   // Setup the audio input.
