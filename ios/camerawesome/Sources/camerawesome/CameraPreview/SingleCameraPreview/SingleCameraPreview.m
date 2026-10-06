@@ -207,29 +207,27 @@
 
   // Determine the target size based on the current mode and settings
   if (_captureMode == Video || _videoController.isRecording) {
-      // If recording video, prioritize the recording quality setting
-      // TODO: Need a way to get the CGSize from the _recordingQuality enum or _videoOptions
-      // For now, let's assume a helper function or default high quality if direct mapping isn't obvious.
-      // Placeholder: If video options exist, try to use them, otherwise fall back.
-      // If no direct mapping, maybe use the highest available preset suitable for video?
-      // Or just pass CGSizeZero to let selectVideoCapturePreset pick the best for video?
-      // For now, let's pass CGSizeZero to select the best default for video capture.
-      if (_videoOptions != nil) {
-         // Hypothetical: Get size from VideoOptions quality. Needs actual implementation.
-         // targetSize = [CameraQualities sizeFromQuality:_recordingQuality];
-         // If no direct mapping, maybe use the highest available preset suitable for video?
-         // Or just pass CGSizeZero to let selectVideoCapturePreset pick the best for video?
-         // For now, let's pass CGSizeZero to select the best default for video capture.
-         targetSize = CGSizeZero; 
-      } else if (!CGSizeEqualToSize(currentPreviewSize, CGSizeZero)){
-         // Use provided size if valid and no video options
-         targetSize = currentPreviewSize;
-      } else {
-         // Fallback to best quality if no specific size or options given
-         targetSize = CGSizeZero;
+      // Video: run the session at the recording quality. The video can
+      // never exceed the session size, so the old fixed 720p session
+      // capped every recording at 720p. The image stream downscales its
+      // own frames (ImageStreamController), so a large session no longer
+      // makes the remote preview heavy. Portrait sizes, as
+      // selectPresetForSize expects; unsupported presets fall back there.
+      switch (_recordingQuality) {
+        case VideoRecordingQualityUhd:
+        case VideoRecordingQualityHighest:
+          targetSize = CGSizeMake(2160, 3840);
+          break;
+        case VideoRecordingQualityFhd:
+          targetSize = CGSizeMake(1080, 1920);
+          break;
+        default:
+          targetSize = CGSizeMake(720, 1280);
+          break;
       }
   } else if (_imageStreamController.streamImages) {
-      // If only streaming (not recording), force 720p for potential stability (based on commit history)
+      // Photo mode while streaming: 720p keeps the preview light (photos
+      // come from the photo output at full resolution regardless).
       targetSize = CGSizeMake(720, 1280);
   } else if (CGSizeEqualToSize(currentPreviewSize, CGSizeZero)) {
       // If neither recording nor streaming, and no size provided, use best quality
@@ -505,7 +503,15 @@
     return;
   }
   
+  CaptureModes previousMode = _captureMode;
   _captureMode = captureMode;
+  // The session size depends on the mode (video runs at the recording
+  // quality, photo at 720p while streaming): re-apply it on a switch.
+  if (previousMode != captureMode) {
+    [_captureSession beginConfiguration];
+    [self setCameraPreset:CGSizeZero];
+    [_captureSession commitConfiguration];
+  }
   // Attach audio when ENTERING video mode (guarded + config-wrapped): doing
   // it here keeps the actual record start free of session reconfiguration -
   // attaching lazily at record start disrupted the first recording (started

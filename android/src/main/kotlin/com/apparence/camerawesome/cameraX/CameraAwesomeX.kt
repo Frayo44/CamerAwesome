@@ -38,6 +38,7 @@ import io.flutter.embedding.engine.plugins.FlutterPlugin.FlutterPluginBinding
 import io.flutter.embedding.engine.plugins.activity.ActivityAware
 import io.flutter.embedding.engine.plugins.activity.ActivityPluginBinding
 import io.flutter.plugin.common.EventChannel
+import io.flutter.plugin.common.MethodChannel
 import io.flutter.view.TextureRegistry
 import io.reactivex.rxjava3.disposables.Disposable
 import io.reactivex.rxjava3.subjects.BehaviorSubject
@@ -565,6 +566,7 @@ class CameraAwesomeX : CameraInterface, FlutterPlugin, ActivityAware {
 
     override fun receivedImageFromStream() {
         cameraState.imageAnalysisBuilder?.lastFrameAnalysisFinished()
+        cameraState.previewTap?.processor?.ack()
     }
 
 
@@ -807,6 +809,18 @@ class CameraAwesomeX : CameraInterface, FlutterPlugin, ActivityAware {
         EventChannel(binding.binaryMessenger, "camerawesome/permissions").setStreamHandler(
             cameraPermissions
         )
+        // Experimental switches, kept off the pigeon API so they stay easy
+        // to drop. Takes effect on the next camera bind.
+        MethodChannel(binding.binaryMessenger, "camerawesome/experimental")
+            .setMethodCallHandler { call, result ->
+                when (call.method) {
+                    "setGpuPreviewTap" -> {
+                        CameraXState.useGpuPreviewTap = call.arguments as? Boolean ?: false
+                        result.success(null)
+                    }
+                    else -> result.notImplemented()
+                }
+            }
         physicalButtonHandler = PhysicalButtonsHandler()
         EventChannel(binding.binaryMessenger, "camerawesome/physical_button").setStreamHandler(
             physicalButtonHandler

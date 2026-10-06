@@ -6,6 +6,7 @@
 //
 
 #import "ImageStreamController.h"
+#import <Accelerate/Accelerate.h>
 
 @implementation ImageStreamController
 
@@ -33,65 +34,94 @@ NSInteger const MaxPendingProcessedImage = 4;
   
   _processingImage++;
   
+  // The session can run at the recording size (up to 4K) while the stream
+  // only feeds a small remote preview: downscale off the main thread so
+  // each emitted frame stays at most kMaxStreamLongSide on its long side -
+  // the 720p-class frames this stream always carried.
   CVPixelBufferRef pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer);
+  CVPixelBufferRetain(pixelBuffer);
+  NSString *rotation = [self getInputImageOrientation:orientation];
+  dispatch_async([ImageStreamController scaleQueue], ^{
+    NSDictionary *imageBuffer = [ImageStreamController streamFrameFrom:pixelBuffer rotation:rotation];
+    CVPixelBufferRelease(pixelBuffer);
+    dispatch_async(dispatch_get_main_queue(), ^{
+      if (imageBuffer == nil || self->_imageStreamEventSink == nil) {
+        // Nothing reaches Dart, so no ack will come: release the slot here.
+        [self receivedImageFromStream];
+        return;
+      }
+      self->_imageStreamEventSink(imageBuffer);
+    });
+  });
+}
+
+static const size_t kMaxStreamLongSide = 1280;
+
++ (dispatch_queue_t)scaleQueue {
+  static dispatch_queue_t queue;
+  static dispatch_once_t once;
+  dispatch_once(&once, ^{
+    queue = dispatch_queue_create("camerawesome.imagestream.scale", DISPATCH_QUEUE_SERIAL);
+  });
+  return queue;
+}
+
+/// One bgra8888 plane, downscaled when the source is larger than
+/// kMaxStreamLongSide; same map shape the stream always emitted.
++ (nullable NSDictionary *)streamFrameFrom:(CVPixelBufferRef)pixelBuffer rotation:(NSString *)rotation {
+  if (CVPixelBufferIsPlanar(pixelBuffer)) {
+    return nil; // the data output is configured for 32BGRA
+  }
   CVPixelBufferLockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+  size_t srcWidth = CVPixelBufferGetWidth(pixelBuffer);
+  size_t srcHeight = CVPixelBufferGetHeight(pixelBuffer);
+  size_t longSide = MAX(srcWidth, srcHeight);
   
-  size_t imageWidth = CVPixelBufferGetWidth(pixelBuffer);
-  size_t imageHeight = CVPixelBufferGetHeight(pixelBuffer);
-  
-  NSMutableArray *planes = [NSMutableArray array];
-  
-  const Boolean isPlanar = CVPixelBufferIsPlanar(pixelBuffer);
-  size_t planeCount;
-  if (isPlanar) {
-    planeCount = CVPixelBufferGetPlaneCount(pixelBuffer);
+  size_t width = srcWidth;
+  size_t height = srcHeight;
+  size_t bytesPerRow;
+  NSData *bytes;
+  if (longSide > kMaxStreamLongSide) {
+    width = srcWidth * kMaxStreamLongSide / longSide;
+    height = srcHeight * kMaxStreamLongSide / longSide;
+    bytesPerRow = width * 4;
+    NSMutableData *scaled = [NSMutableData dataWithLength:bytesPerRow * height];
+    vImage_Buffer src = {
+      .data = CVPixelBufferGetBaseAddress(pixelBuffer),
+      .height = srcHeight,
+      .width = srcWidth,
+      .rowBytes = CVPixelBufferGetBytesPerRow(pixelBuffer),
+    };
+    vImage_Buffer dst = {
+      .data = scaled.mutableBytes,
+      .height = height,
+      .width = width,
+      .rowBytes = bytesPerRow,
+    };
+    vImage_Error err = vImageScale_ARGB8888(&src, &dst, NULL, kvImageNoFlags);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
+    if (err != kvImageNoError) {
+      return nil;
+    }
+    bytes = scaled;
   } else {
-    planeCount = 1;
+    bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    bytes = [NSData dataWithBytes:CVPixelBufferGetBaseAddress(pixelBuffer) length:bytesPerRow * srcHeight];
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
   }
   
-  for (int i = 0; i < planeCount; i++) {
-    void *planeAddress;
-    size_t bytesPerRow;
-    size_t height;
-    size_t width;
-    
-    if (isPlanar) {
-      planeAddress = CVPixelBufferGetBaseAddressOfPlane(pixelBuffer, i);
-      bytesPerRow = CVPixelBufferGetBytesPerRowOfPlane(pixelBuffer, i);
-      height = CVPixelBufferGetHeightOfPlane(pixelBuffer, i);
-      width = CVPixelBufferGetWidthOfPlane(pixelBuffer, i);
-    } else {
-      planeAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
-      bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
-      height = CVPixelBufferGetHeight(pixelBuffer);
-      width = CVPixelBufferGetWidth(pixelBuffer);
-    }
-    
-    NSNumber *length = @(bytesPerRow * height);
-    NSData *bytes = [NSData dataWithBytes:planeAddress length:length.unsignedIntegerValue];
-    
-    [planes addObject:@{
+  return @{
+    @"width": @(width),
+    @"height": @(height),
+    @"format": @"bgra8888",
+    @"planes": @[@{
       @"bytesPerRow": @(bytesPerRow),
       @"width": @(width),
       @"height": @(height),
       @"bytes": [FlutterStandardTypedData typedDataWithBytes:bytes],
-    }];
-  }
-  
-  CVPixelBufferUnlockBaseAddress(pixelBuffer, kCVPixelBufferLock_ReadOnly);
-  
-  NSDictionary *imageBuffer = @{
-    @"width": [NSNumber numberWithUnsignedLong:imageWidth],
-    @"height": [NSNumber numberWithUnsignedLong:imageHeight],
-    @"format": @"bgra8888", // TODO: change this dynamically
-    @"planes": planes,
-    @"rotation": [self getInputImageOrientation:orientation]
+    }],
+    @"rotation": rotation,
   };
-  
-  dispatch_async(dispatch_get_main_queue(), ^{
-    self->_imageStreamEventSink(imageBuffer);
-  });
-  
 }
 
 - (NSString *)getInputImageOrientation:(UIDeviceOrientation)orientation {

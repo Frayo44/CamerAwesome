@@ -57,6 +57,79 @@ data class CameraXState(
     var imageAnalysisBuilder: ImageAnalysisBuilder? = null
     private var imageAnalysis: ImageAnalysis? = null
 
+    companion object {
+        /**
+         * Experimental, off by default: in video mode, feed the analysis
+         * stream from the Preview stream on the GPU (see [PreviewTapEffect])
+         * so VideoCapture isn't capped by the 3-stream combination rules.
+         * Set through the "camerawesome/experimental" method channel.
+         */
+        @JvmStatic
+        var useGpuPreviewTap = false
+
+        /**
+         * 4K recording plus the GPU tap needs memory: on a 2 GB phone
+         * (Nexus 5X) the low-memory killer took the app down seconds after
+         * binding. Below 3 GB, or on devices Android flags as low-RAM, keep
+         * the proven ImageAnalysis path (~1080p cap).
+         */
+        @JvmStatic
+        fun gpuPreviewTapSupported(context: android.content.Context): Boolean {
+            val am = context.getSystemService(android.content.Context.ACTIVITY_SERVICE)
+                as android.app.ActivityManager
+            if (am.isLowRamDevice) return false
+            val info = android.app.ActivityManager.MemoryInfo()
+            am.getMemoryInfo(info)
+            return info.totalMem >= 3L * 1024 * 1024 * 1024 * 9 / 10
+        }
+    }
+
+    /** Live while [useGpuPreviewTap] serves the analysis stream. */
+    var previewTap: PreviewTapEffect? = null
+        private set
+    private var tapTargetRotation = Surface.ROTATION_0
+
+    /**
+     * Binds Preview + VideoCapture with the GPU tap standing in for
+     * ImageAnalysis. False (camera left unbound) if this device rejects it,
+     * so the caller falls back to the regular ImageAnalysis path.
+     */
+    @SuppressLint("RestrictedApi")
+    private fun bindWithPreviewTap(
+        activity: Activity,
+        cameraSelector: CameraSelector,
+        useCaseGroupBuilder: UseCaseGroup.Builder,
+    ): Boolean {
+        // The preview output arrives already upright for the portrait
+        // display, so the tap only rotates by how far the device is turned
+        // from that (0 held upright, +-90 in landscape) - the same turn the
+        // old ImageAnalysis frames followed via targetRotation.
+        val tap = PreviewTapEffect.create(imageAnalysisBuilder!!) {
+            val info = previewCamera?.cameraInfo ?: return@create 0
+            (info.getSensorRotationDegrees(tapTargetRotation) -
+                info.getSensorRotationDegrees(Surface.ROTATION_0) + 360) % 360
+        }
+        return try {
+            useCaseGroupBuilder.setViewPort(ViewPort.Builder(rational, Surface.ROTATION_0).build())
+            useCaseGroupBuilder.addEffect(tap)
+            imageAnalysis = null
+            concurrentCamera = null
+            previewCamera = cameraProvider.bindToLifecycle(
+                activity as LifecycleOwner,
+                cameraSelector,
+                useCaseGroupBuilder.build(),
+            )
+            previewTap = tap
+            Log.i(CamerawesomePlugin.TAG, "Video bound with the GPU preview tap")
+            true
+        } catch (e: Exception) {
+            Log.w(CamerawesomePlugin.TAG, "GPU preview tap not supported here, using ImageAnalysis: $e")
+            tap.processor.release()
+            cameraProvider.unbindAll()
+            false
+        }
+    }
+
     private val mainCameraInfos: CameraInfo
         @SuppressLint("RestrictedApi") get() {
             if (previewCamera == null && concurrentCamera == null) {
@@ -196,11 +269,18 @@ data class CameraXState(
             val cameraSelector =
                 if (sensors.first().position == PigeonSensorPosition.FRONT) CameraSelector.DEFAULT_FRONT_CAMERA else CameraSelector.DEFAULT_BACK_CAMERA
             // Preview
+            // With the GPU tap the preview no longer shares a capped stream:
+            // keep it near 1080p instead of letting it run at full sensor
+            // size (pointless GPU load; the recording is a separate stream).
+            val tapPlanned = useGpuPreviewTap && gpuPreviewTapSupported(activity) && enableImageStream &&
+                imageAnalysisBuilder != null && currentCaptureMode == CaptureModes.VIDEO
             if (currentCaptureMode != CaptureModes.ANALYSIS_ONLY) {
                 previews!!.add(
                     if (aspectRatio != null) {
                         Preview.Builder()
-                            .setResolutionSelector(resolutionSelector)
+                            .setResolutionSelector(
+                                if (tapPlanned) tapPreviewSelector(aspectRatio!!) else resolutionSelector
+                            )
                             .build()
                     } else {
                         Preview.Builder().build()
@@ -240,6 +320,15 @@ data class CameraXState(
 
             val addAnalysisUseCase = enableImageStream && imageAnalysisBuilder != null
             cameraProvider.unbindAll()
+            previewTap?.processor?.release()
+            previewTap = null
+            if (tapPlanned && addAnalysisUseCase &&
+                currentCaptureMode == CaptureModes.VIDEO && previews!!.isNotEmpty() &&
+                bindWithPreviewTap(activity, cameraSelector, useCaseGroupBuilder)
+            ) {
+                previewCamera!!.cameraControl.enableTorch(flashMode == FlashMode.ALWAYS)
+                return
+            }
             imageAnalysis = if (addAnalysisUseCase) imageAnalysisBuilder!!.build() else null
             // TODO Orientation might be wrong, to be verified
             useCaseGroupBuilder.setViewPort(ViewPort.Builder(rational, Surface.ROTATION_0).build())
@@ -287,6 +376,19 @@ data class CameraXState(
             }
             previewCamera!!.cameraControl.enableTorch(flashMode == FlashMode.ALWAYS)
         }
+    }
+
+    private fun tapPreviewSelector(aspectRatio: Int): ResolutionSelector {
+        val bound = if (aspectRatio == AspectRatio.RATIO_16_9) Size(1920, 1080) else Size(1440, 1080)
+        return ResolutionSelector.Builder()
+            .setAspectRatioStrategy(
+                if (aspectRatio == AspectRatio.RATIO_16_9) AspectRatioStrategy.RATIO_16_9_FALLBACK_AUTO_STRATEGY
+                else AspectRatioStrategy.RATIO_4_3_FALLBACK_AUTO_STRATEGY
+            )
+            .setResolutionStrategy(
+                ResolutionStrategy(bound, ResolutionStrategy.FALLBACK_RULE_CLOSEST_LOWER_THEN_HIGHER)
+            )
+            .build()
     }
 
     private fun getResolutionSelector(aspectRatio: Int): ResolutionSelector {
@@ -455,7 +557,7 @@ data class CameraXState(
     }
 
     override fun onOrientationChanged(orientation: Int) {
-        imageAnalysis?.targetRotation = when (orientation) {
+        val rotation = when (orientation) {
             in 225 until 315 -> {
                 Surface.ROTATION_90
             }
@@ -472,6 +574,8 @@ data class CameraXState(
                 Surface.ROTATION_0
             }
         }
+        imageAnalysis?.targetRotation = rotation
+        tapTargetRotation = rotation
     }
 
     fun updateAspectRatio(newAspectRatio: String) {

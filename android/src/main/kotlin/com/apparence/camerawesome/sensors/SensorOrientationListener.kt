@@ -10,7 +10,10 @@ class SensorOrientationListener : EventChannel.StreamHandler, SensorOrientation 
     }
 
     override fun onCancel(arguments: Any?) {
-        events?.endOfStream()
+        // No endOfStream(): Dart caches one broadcast stream for orientation,
+        // and ending it when the last listener leaves (e.g. every rotating
+        // button rebuilt at once) closed it for good - later buttons never
+        // rotated again. Dropping the sink lets the next listen re-attach.
         events = null
     }
 

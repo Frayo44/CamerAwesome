@@ -100,11 +100,18 @@ FourCharCode const videoFormat = kCVPixelFormatType_32BGRA;
   AVFileType fileType = [self getBestFileTypeAccordingOptions:options];
   CGSize videoSize = [self getBestVideoSizeAccordingQuality: _recordingQuality];
     
-  NSDictionary *videoSettings = @{
+  NSMutableDictionary *videoSettings = [@{
     AVVideoCodecKey   : codecType,
     AVVideoWidthKey   : @(videoSize.height),
     AVVideoHeightKey  : @(videoSize.width),
-  };
+  } mutableCopy];
+  // Without a target the writer's default left recordings around 2-3 Mbps
+  // (soft, blocky). Typical phone-camera rates per size; same as Android.
+  if (codecType == AVVideoCodecTypeH264 || codecType == AVVideoCodecTypeHEVC) {
+    CGFloat longSide = MAX(videoSize.width, videoSize.height);
+    NSInteger bitrate = longSide >= 3840 ? 35000000 : (longSide >= 1920 ? 16000000 : 8000000);
+    videoSettings[AVVideoCompressionPropertiesKey] = @{AVVideoAverageBitRateKey : @(bitrate)};
+  }
   
   _videoWriterInput = [AVAssetWriterInput assetWriterInputWithMediaType:AVMediaTypeVideo outputSettings:videoSettings];
   [_videoWriterInput setTransform:[self getVideoOrientation]];

@@ -22,6 +22,10 @@ let package = Package(
             publicHeadersPath: "",
             cSettings: [
                 .headerSearchPath("include")
+            ],
+            // vImage: downscales image-stream frames (ImageStreamController).
+            linkerSettings: [
+                .linkedFramework("Accelerate")
             ]
         )
     ]

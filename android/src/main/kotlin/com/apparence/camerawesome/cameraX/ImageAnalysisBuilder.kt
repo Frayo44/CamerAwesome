@@ -22,10 +22,12 @@ class ImageAnalysisBuilder private constructor(
     private val format: OutputImageFormat,
     private val width: Int,
     private val height: Int,
-    private val executor: Executor,
+    val executor: Executor,
     var previewStreamSink: EventChannel.EventSink? = null,
     private val maxFramesPerSecond: Double?,
 ) {
+    /** Frame-rate cap shared with [PreviewTapProcessor]. */
+    val maxFps: Double? get() = maxFramesPerSecond
     private var lastImageEmittedTimeStamp: Long? = null
     private var countDownLatch = ResettableCountDownLatch(1)
     fun lastFrameAnalysisFinished() {
